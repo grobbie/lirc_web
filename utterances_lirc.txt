@@ -1,6 +1,19 @@
-tv to change the channel to {one|Question}
-tv to change the channel to {one two|Question}
-tv to change the channel to {one two three|Question}
-tv to {one|Question}
-tv to {one two|Question}
-tv to {one two three|Question}
+tvChannel	to change the channel to {one|Question}
+tvChannel	to change the channel to {one two|Question}
+tvChannel	to change the channel to {one two three|Question}
+tvChannel	to change the channel to {one two three four|Question}
+power	to power off the TV
+power	to power on
+power	to turn off the TV
+power	to turn on the TV
+power	to power up the TV
+power	to fire up the TV
+power	to spin up the TV
+mute	to mute the TV
+mute	to cut the sound on the TV
+mute	to turn off the sound
+mute	to shut off the noise
+mute	to turn the sound down
+mute	to turn the sound back on
+mute	to unmute the TV
+mute	to put the sound back on

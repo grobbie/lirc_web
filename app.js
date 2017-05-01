@@ -23,6 +23,13 @@ var context = {
   statement: null
 };
 
+var INTENTS = {
+  MUTE: "mute",
+  POWER: "power",
+  TV_CHANNEL: "tvChannel",
+  UNKNOWN: ""
+}
+
 var PROMPTS = {
   NONE: -1
 };
@@ -185,16 +192,27 @@ function parseIntent(callback) {
 }
 
 function runAMacro(callback) {
-  // If the macro exists, execute it
-  for(child in config.macros){
-    if(leven(child, context.statement) < 4) {
-      macros.exec(config.macros[child], lircNode);
-      context.intent.responseText = "OK. TV remote did " + child + ".";
-      break;
+
+  if(context.intent.intentName == INTENTS.TV_CHANNEL) {
+
+    // If the macro exists, execute it
+    for(child in config.macros){
+      if(leven(child, context.statement) < 4) {
+        macros.exec(config.macros[child], lircNode);
+        context.intent.responseText = "OK. The TV remote changed the channel to " + child + ".";
+        break;
+      }
     }
+  } else if(context.intent.intentName == INTENTS.MUTE) {
+        macros.exec(config.macros[INTENTS.MUTE], lircNode);
+        context.intent.responseText = "OK. The TV remote pushed the mute button";
+  } else if(context.intent.intentName == INTENTS.POWER) {
+        macros.exec(config.macros[INTENTS.POWER], lircNode);
+        context.intent.responseText = "OK. The TV remote pushed the power button";
   }
+
   if(context.intent.responseText == '') {
-    context.intent.responseText = "Sorry, I'm not sure I can do that.";
+    context.intent.responseText = "Sorry, I'm not sure I can get the TV remote to do that.";
   }
   callback(context);
 }
@@ -294,17 +312,17 @@ if (config.server && config.server.ssl && config.server.ssl_cert && config.serve
 function getIntentFromRequest(req) {
   var query = getQueryFromRequest(req);
   var json = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null;
-  var queryText = json ? json.slots.Question.value : null;
+  var queryText = '';
+  if(json && json.slots && json.slots.Question) {
+    var queryText = json.slots.Question.value;
+  }
+  var intentName = json ? json.name : INTENTS.UNKNOWN;
   var responseEnd = true;
   var responseText = '';
 
-  if (queryText == null) {
-    responseText = 'What would you like me to do?';
-    responseEnd = false;
-  }
-
   return {
     query: queryText,
+    intentName: intentName,
     responseText: responseText,
     responseEnd: responseEnd
   };

@@ -1,13 +1,23 @@
 {
-	"intents": [
-		{
-			"intent": "tv",
-			"slots": [
-				{
-					"name": "Question",
-					"type": "LITERAL"
-				}
-			]
-		}
-	]
+  "intents": [
+    {
+      "intent": "tvChannel",
+      "slots": [
+        {
+          "name": "Question",
+          "type": "LITERAL"
+        }
+      ]
+    },
+    {
+      "intent": "power",
+      "slots": [
+      ]
+    },
+    {
+      "intent": "mute",
+      "slots": [
+      ]
+    }
+  ]
 }

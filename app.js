@@ -11,6 +11,21 @@ var labels = require('./lib/labels');
 var https = require('https');
 var fs = require('fs');
 var macros = require('./lib/macros');
+var leven = require('leven');
+
+var context = {
+  appname: 'Amazon Echo / Alexa LIRC Skill Server',
+  server: null,
+  intent: null,
+  query: null,
+  request: null,
+  response: null,
+  statement: null
+};
+
+var PROMPTS = {
+  NONE: -1
+};
 
 // Precompile templates
 var JST = {
@@ -133,6 +148,57 @@ app.get('/app.appcache', function (req, res) {
   }));
 });
 
+app.get('/echo', function (req, res) {
+  context.intent = getIntentFromRequest(req);
+  context.request = req;
+  context.statement = context.intent.query;
+
+  //Figure out what to do with the request.
+  parseIntent(function () {
+    if (context.cancel) {
+      context.prompt = PROMPTS.NONE;
+      context.userPrompted = false;
+      context.cancel = false;
+      context.intent.responseEnd = true;
+    }
+
+    //Respond to the AWS lambda service
+    res.json({
+      text: context.intent.responseText,
+      shouldEndSession: context.intent.responseEnd
+    });
+  });
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Parse intent to determine what to do.
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+function parseIntent(callback) {
+
+  if (context.intent.responseEnd && !context.cancel) {
+      context.userPrompted = false;
+      context.cancel = true;
+      context.intent.responseEnd = true;
+      context.intent.cancel = true;
+      runAMacro(callback);
+  }
+}
+
+function runAMacro(callback) {
+  // If the macro exists, execute it
+  for(child in config.macros){
+    if(leven(child, context.statement) < 4) {
+      macros.exec(config.macros[child], lircNode);
+      context.intent.responseText = "OK. TV remote did " + child + ".";
+      break;
+    }
+  }
+  if(context.intent.responseText == '') {
+    context.intent.responseText = "Sorry, I'm not sure I can do that.";
+  }
+  callback(context);
+}
+
 // Refresh
 app.get('/refresh', function (req, res) {
   _init();
@@ -223,3 +289,36 @@ if (config.server && config.server.ssl && config.server.ssl_cert && config.serve
 
   console.log('Open Source Universal Remote UI + API has started on port ' + config.server.ssl_port + ' (https).');
 }
+
+
+function getIntentFromRequest(req) {
+  var query = getQueryFromRequest(req);
+  var json = query && query.json != undefined && query.json != 'undefined' ? JSON.parse(query.json) : null;
+  var queryText = json ? json.slots.Question.value : null;
+  var responseEnd = true;
+  var responseText = '';
+
+  if (queryText == null) {
+    responseText = 'What would you like me to do?';
+    responseEnd = false;
+  }
+
+  return {
+    query: queryText,
+    responseText: responseText,
+    responseEnd: responseEnd
+  };
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Utility
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+function getQueryFromRequest(req) {
+  var url = require('url');
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+
+  return query;
+}
+

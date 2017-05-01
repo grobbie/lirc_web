@@ -1,20 +1,16 @@
-lirc_web
+voice_lirc
 ========
 
-``lirc_web`` is a [nodejs](http://nodejs.org) app that creates a web interface & JSON API for the [LIRC](http://lirc.org) project. It uses [lirc_node](https://github.com/alexbain/lirc_node) to handle communication between LIRC and nodejs.
+``voice_lirc`` is an Amazon Echo / Alexa voice command skill forked from lirc_web. It is a [nodejs](http://nodejs.org) app derived from [lirc_web](https://github.com/alexbain/lirc_web) that creates a web interface & JSON API for the [LIRC](http://lirc.org) project. It uses [lirc_node](https://github.com/alexbain/lirc_node) to handle communication between LIRC and nodejs.
 
-This project allows you to control LIRC from any web browser - phone, tablet, or desktop. The mobile web interface is responsive and optimized for all sized displays. In addition, with the JSON API, you can control LIRC from any web connected device - pebble watch, myo armband, emotiv EEG headset, or beyond.
-
-This is part of the [Open Source Universal Remote](http://opensourceuniversalremote.com) project.
-
-[![Build Status](https://travis-ci.org/alexbain/lirc_web.png)](https://travis-ci.org/alexbain/lirc_web)
+This project allows you to control LIRC from your Amazon Echo so you can issue infrared remote control commands via voice command.
 
 ## Installation
 
-You'll need to have [LIRC](http://lirc.org) installed and configured on your machine to use ``lirc_web``. In addition, you'll need to install [nodejs](http://nodejs.org). Once you have LIRC and nodejs installed and configured, you'll be able to install ``lirc_web``:
+You'll need to have [LIRC](http://lirc.org) installed and configured on your machine to use ``voice_lirc``. In addition, you'll need to install [nodejs](http://nodejs.org). Once you have LIRC and nodejs installed and configured, you'll be able to install ``voice_lirc``:
 
-    npm install -g lirc_web
-    lirc_web
+    npm install -g voice_lirc
+    voice_lirc
 
 Note that you may need to run the `npm install` command with `sudo`.
 
@@ -23,14 +19,6 @@ Note that you may need to run the `npm install` command with `sudo`.
 Verify the web interface works by opening ``http://SERVER:3000/`` in a web browser.
 
 If you want to have `lirc_web`  available via port 80 and start on boot, there are example NGINX and Upstart configuration files included in the ``example_configs/`` directory.
-
-#### Mobile optimizations
-
-`lirc_web` includes performance and user experience optimizations for mobile devices. These can be enabled by adding the `lirc_web` URL as a bookmark to the home screen of your device. Bookmarking `lirc_web` is performed from your phone's web browser. `lirc_web` will then load full screen, as if it was a native iOS or Android app. The URL bar will no longer be visible and `lirc_web` will be selectable from the device's multitasking screen.
-
-Bookmarking is higly recommended for the best mobile experience.
-
-As of v0.3.0, `lirc_web` uses an Application Cache. The enables all assets to be cached locally on the phone. This reduces load time dramatically.
 
 ## Configuration
 
@@ -113,90 +101,35 @@ These are the available configuration options:
 
 Please see the `example_configs/` directory.
 
+## Using lirc_web macros with Amazon Alexa
 
-## Using the JSON API
+To keep things simple, we're going to use the macros feature to invoke sequences of IR commands using Alexa, so you'll want to set those up properly with easily comprehensible names.
 
-Building an app on top of `lirc_web` is straight forward with the included JSON based RESTful API.
-
-API endpoints:
-
-* ``GET`` ``/remotes.json`` - Returns all known remotes and commands
-* ``GET`` ``/remotes/:remote.json`` - Returns all known commands for remote ``:remote``
-* ``GET`` ``/macros.json`` - Returns all known macros
-* ``POST`` ``/remotes/:remote/:command`` - Send ``:command`` to ``:remote`` one time
-* ``POST`` ``/remotes/:remote/:command/send_start`` - Begin sending ``:command``
-* ``POST`` ``/remotes/:remote/:command/send_stop`` - Stop sending ``:command``
-* ``POST`` ``/macros/:macro`` - Send all commands for ``:macro`` one time
-
-
-## Development
-
-Would you like to contribute to and improve ``lirc_web``? Fantastic. To contribute
-patches, run tests or benchmarks, install ``lirc_web`` locally:
-
-    git clone git://github.com/alexbain/lirc_web.git
-    cd lirc_web
-    npm install
-
-Next, you'll need to setup the development environment. ``lirc_web`` uses the [GruntJS](http://gruntjs.com/) built system to make development easier.
-
-Install GruntJS (build environment):
-
-    npm install -g grunt-cli
-    npm install -g grunt-init
-    grunt server
-
-
-**You may need to reload your shell before continuing so the Grunt binares are detected.**
-
-* ``grunt`` will create all of the static assets.
-* ``grunt server`` will start a development server (using sample data) and watch all static assets for change
-
-You can run the test suite by running:
+## Integrating with Amazon Alexa
+* Remember to first set up LIRC on the box so that it will work with your Infrared Remote Controllable devices!!
+```
+node voice_lirc
+```
+* If successfully running, you will see:
 
 ```
-npm test
+Open Source Universal Remote UI + API has started on port 3000 (http).
 ```
 
-If you develop test driven, you may want to launch a continuous test which automatically restarts when server or tests are modified:
+* Sign up or log in to the [AWS Console](http://console.aws.amazon.com) and choose Lambda from the Services > All Services menu. 
+* Create a Lambda function, skip the intro wizard, name this function 'LIRC' and paste the contents of 'lambda redirect.js'.  A description isn't required.
+* Seperate from AWS, log in to your [Amazon Apps & services Developer Account](https://developer.amazon.com/appsandservices) and under Apps & Services, choose Alexa.
+* You will need to add a new Alexa Skill.  The skill has an associated name (lirc), invocation name (tv), intent schema & sample utterances included here that must be specified in order for the functions to work.
+* For each skill, specify the ARN of the lambda functions created on the AWS console.
 
-```
-npm run test:watch
-```
-
-You can run the linter to confirm JS conforms to standards by running:
-
-```
-npm run lint-js
-```
-
-You can also run the linter continuously via grunt:
-```
-grunt watch
-```
-
-
-## Contributing
-
-Before you submit a pull request with your change, please be sure to:
-
-* Add new tests that prove your change works as expected
-* Ensure all existing tests are still passing
-* Run the linter to ensure your code conforms to the js styleguide
-* Update CHANGELOG.md file ('Unreleased' section) with concise bullet points
-
-Once you're sure everything is still working, open a pull request with a clear
-description of what you changed and why. I will not accept a pull request which
-breaks existing tests or adds new functionality without tests.
-
-The exception to this would be refactoring existing code or changing documentation.
-
+### Notes ###
+* Ensure that the port you specifed (default: 3000) is open by your ISP and that it's forwarded to the computer running voice_lirc.
 
 ## License
 
 (The MIT License)
 
-Copyright (c) 2013-2016 Alex Bain &lt;alex@alexba.in&gt;
+Copyright (c) 2013-2017 Alex Bain &lt;alex@alexba.in&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
